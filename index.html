@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strong Club with Canap&eacute; Style Openings</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --border: #0f3460;
+    --text: #e0e0e0;
+    --text-muted: #8899aa;
+    --accent: #e94560;
+    --bid-club: #4caf50;
+    --bid-diamond: #ff9800;
+    --bid-heart: #e94560;
+    --bid-spade: #42a5f5;
+    --bid-nt: #b0bec5;
+    --bid-pass: #888;
+    --bid-dbl: #ff5252;
+    --bid-rdbl: #7c4dff;
+    --hover: #1a3a5c;
+    --node-line: #0f3460;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-size: 1.8em;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 30px;
+    font-size: 0.95em;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .toolbar button {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background 0.2s;
+  }
+
+  .toolbar button:hover {
+    background: var(--hover);
+  }
+
+  .tree ul {
+    list-style: none;
+    padding-left: 24px;
+    position: relative;
+  }
+
+  .tree > ul {
+    padding-left: 0;
+  }
+
+  .tree li {
+    position: relative;
+    padding: 2px 0;
+  }
+
+  .tree ul li::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--node-line);
+  }
+
+  .tree ul li:last-child::before {
+    bottom: 50%;
+  }
+
+  .tree ul li::after {
+    content: '';
+    position: absolute;
+    left: -16px;
+    top: 14px;
+    width: 14px;
+    height: 1px;
+    background: var(--node-line);
+  }
+
+  .tree > ul > li::before,
+  .tree > ul > li::after {
+    display: none;
+  }
+
+  .node {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: default;
+    transition: background 0.15s;
+    user-select: none;
+  }
+
+  .node:hover {
+    background: var(--hover);
+  }
+
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle.collapsed {
+    transform: rotate(-90deg);
+  }
+
+  .toggle.leaf {
+    visibility: hidden;
+  }
+
+  .bid {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 0.9em;
+    min-width: 36px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .bid-1C, .bid-2C, .bid-3C, .bid-4C, .bid-5C { background: var(--bid-club); color: #fff; }
+  .bid-1D, .bid-2D, .bid-3D, .bid-4D, .bid-5D { background: var(--bid-diamond); color: #fff; }
+  .bid-1H, .bid-2H, .bid-3H, .bid-4H, .bid-5H { background: var(--bid-heart); color: #fff; }
+  .bid-1S, .bid-2S, .bid-3S, .bid-4S, .bid-5S { background: var(--bid-spade); color: #fff; }
+  .bid-1NT, .bid-2NT, .bid-3NT, .bid-4NT, .bid-5NT { background: var(--bid-nt); color: #1a1a2e; }
+  .bid-Pass { background: var(--bid-pass); color: #fff; }
+  .bid-Dbl { background: var(--bid-dbl); color: #fff; }
+  .bid-Rdbl { background: var(--bid-rdbl); color: #fff; }
+
+  .suit-C::after { content: '\2663'; }
+  .suit-D::after { content: '\2666'; }
+  .suit-H::after { content: '\2665'; }
+  .suit-S::after { content: '\2660'; }
+
+  .desc {
+    color: var(--text-muted);
+    font-size: 0.88em;
+  }
+
+  .alert {
+    background: #1a3c8f;
+    color: #fff;
+    font-size: 0.7em;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #2a5a8a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    font-style: italic;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+
+  .info:hover {
+    background: #3a7abf;
+  }
+
+  .info .info-text {
+    display: none;
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e3a5f;
+    border: 1px solid #3a7abf;
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 400;
+    white-space: normal;
+    width: 320px;
+    max-width: 70vw;
+    z-index: 100;
+    line-height: 1.5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+
+  .info.open .info-text {
+    display: block;
+  }
+
+  .info-text table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6px;
+  }
+
+  .info-text th {
+    text-align: left;
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 3px 6px;
+    border-bottom: 1px solid #3a7abf;
+  }
+
+  .info-text td {
+    padding: 3px 6px;
+    font-size: 0.9em;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .info-text caption {
+    text-align: left;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  li.collapsed > ul {
+    display: none;
+  }
+
+  .section-header {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 18px;
+    margin: 20px auto;
+    max-width: 900px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+
+  .section-header:hover {
+    background: var(--hover);
+  }
+
+  .section-header h2 {
+    font-size: 1.15em;
+    color: var(--accent);
+  }
+
+  .section-header .toggle {
+    font-size: 14px;
+  }
+
+  .section-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 8px 10px;
+  }
+
+  .section-body.hidden {
+    display: none;
+  }
+
+  .system-note {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-bottom: 20px;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8em;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<h1>Strong Club with Canap&eacute; Style Openings</h1>
+<p class="subtitle">Gunnar Valur / Dan&iacute;el M&aacute;r</p>
+
+<p class="system-note"><span class="alert">ALERT</span> This system must be pre-alerted to opponents. All canap&eacute; openings are alertable.</p>
+
+<div class="toolbar">
+  <button onclick="expandAll()">Expand All</button>
+  <button onclick="collapseAll()">Collapse All</button>
+  <button onclick="expandLevel(1)">Level 1</button>
+  <button onclick="expandLevel(2)">Level 2</button>
+</div>
+
+<div id="app"></div>
+
+<footer>
+  Strong Club with Canap&eacute; Style Openings &mdash; Bidding System Reference
+</footer>
+
+<script>
+// ============================================================
+// BIDDING SYSTEM DATA
+// ============================================================
+// bid:      string or array of strings for combined badges
+// desc:     description text (HTML allowed for suit symbols)
+// alert:    true to show ALERT badge
+// info:     HTML string for info tooltip
+// children: array of child nodes
+// flat:     true for non-expandable section headers (no tree body)
+// ============================================================
+
+const S = { C: '\u2663', D: '\u2666', H: '\u2665', S: '\u2660' };
+const s = (suit) => `<span class="suit-${suit}"></span>`;
+
+const NT_LADDER_INFO = `<b>Balanced</b> = no 5-card suit. <b>Semi-balanced</b> = no singleton. <b>Unbalanced</b> = singleton or void.<br><br><table><caption>Balanced NT Ladder</caption><tr><th></th><th>Direct</th><th>Kokish (1${s('H')}\u20131${s('S')})</th></tr><tr><td>1NT</td><td>16\u201318</td><td>19\u201320</td></tr><tr><td>2NT</td><td>21\u201322</td><td>23\u201324</td></tr><tr><td>3NT</td><td>25\u201326</td><td>27\u201328</td></tr></table>`;
+
+const RELAY_INFO = (suits) => `<b>Relay \u2014 responder shows shortness:</b><br>\u2022 Cheapest bid = no short suit<br>\u2022 Then short suits from bottom up (${suits})<br><br><b>Next relay = Controls</b> (A=2, K=1)<br>\u2022 1st step = 2 controls<br>\u2022 2nd step = 3, etc.`;
+
+const system = [
+  // === Pass ===
+  { bid: "Pass", desc: "Can contain balanced 3334/3343 or 2335 with 11\u201312 HCP.", flat: true },
+
+  // === 1C ===
+  { bid: "1C", desc: `16+ HCP, any distribution. Transfer responses.`, alert: true,
+    info: `1${S.D} = negative (0\u20137 HCP). Otherwise responses are transfers showing a 5+ card suit and GF. Transfer to NT (1${S.S}) with no 5-card suit.<br><br>With a typical WJS hand, responder should bid 1${S.D} if the suit contains A or K. With 2\u2212 HCP, responder may bid 2${S.H}/2${S.S}/3${S.C}/3${S.D} directly.`,
+    children: [
+      { bid: "1D", desc: `0\u20137(8) HCP, most distributions.`, alert: true, children: [
+        { bid: "1H", desc: `5+${s('H')}, or balanced (Kokish).`, alert: true,
+          info: `This is a Kokish bid, usually forcing to 1${s('S')}. Responder may break the relay with A or K sixth of a suit by transferring to that suit (1NT/2${s('C')}/2${s('D')}/2${s('H')}).<br><br><table><caption>Balanced NT Ladder</caption><tr><th></th><th>Direct</th><th>Kokish (1${s('H')}\u20131${s('S')})</th></tr><tr><td>1NT</td><td>16\u201318</td><td>19\u201320</td></tr><tr><td>2NT</td><td>21\u201322</td><td>23\u201324</td></tr><tr><td>3NT</td><td>25\u201326</td><td>27\u201328</td></tr></table>`,
+          children: [
+            { bid: "1S", desc: "Forced relay.", alert: true, children: [
+              { bid: "1NT", desc: `19\u201320 bal/semi-bal.` },
+              { bid: ["2C","2D","2S"], desc: `5+${s('H')}, 4+ of bid suit.` },
+              { bid: "2H", desc: `6+${s('H')}.` },
+              { bid: "2NT", desc: `23\u201324 bal/semi-bal.` },
+              { bid: ["3C","3D","3S"], desc: `Strong two-suiter, ${s('H')} + bid suit. GF.` },
+              { bid: "3H", desc: `Invitational, 7${s('H')}.` },
+              { bid: "3NT", desc: `27\u201328 bal/semi-bal.` },
+            ]},
+            { bid: ["1NT","2C","2D","2H"], desc: "Transfer with A or K sixth.", alert: true },
+          ]
+        },
+        { bid: "1S", desc: `5+${s('S')}, natural.`, children: [
+          { bid: "1NT", desc: `Denies 3${s('S')}, semi-balanced.` },
+          { bid: "2C", desc: `Transfer to ${s('D')}. Denies 3${s('S')}.`, alert: true },
+          { bid: "2D", desc: `Transfer to ${s('H')}. Denies 3${s('S')}.`, alert: true },
+          { bid: "2H", desc: `Max (5\u20137 HCP), 3+${s('S')} support.`, alert: true },
+          { bid: "2S", desc: `Min, 3+${s('S')} support.` },
+          { bid: "2NT", desc: `Transfer to ${s('C')}. Denies 3${s('S')}.`, alert: true },
+        ]},
+        { bid: "1NT", desc: `16\u201318 bal/semi-bal. System on: Stayman, Transfers, Puppet.`,
+          info: NT_LADDER_INFO },
+        { bid: ["2C","2D"], desc: `5+ of bid suit, unbalanced, F1. Typically with 4-card major or 19+. Natural responses, new suit forcing.` },
+        { bid: ["2H","2S","3C","3D"], desc: "Sets trump, GF.",
+          info: "Jump to game with nothing. Other bids show feature. Simple raise = max with 1\u20132 controls." },
+        { bid: "2NT", desc: `21\u201322 bal/semi-bal.` },
+        { bid: "3NT", desc: `25\u201326 bal/semi-bal.` },
+      ]},
+      { bid: "1H", desc: `5+${s('S')}, GF. Transfer.`, alert: true, children: [
+        { bid: "1S", desc: `Accepts transfer, 3+${s('S')} support.`,
+          info: `Opener accepts with 3+ support. May accept with 2, but a 5-card major takes precedence.<br><br><b>If opener accepts the transfer, relay starts:</b><br>\u2022 Cheapest bid = no short suit<br>\u2022 Then short suits from bottom up (${s('C')}, ${s('D')}, ${s('H')})<br><br><b>Next relay = Controls</b> (A=2, K=1)<br>\u2022 1st step = 2 controls<br>\u2022 2nd step = 3, etc.` },
+      ]},
+      { bid: "1S", desc: `8+ HCP, no 5-card suit, GF.`, alert: true },
+      { bid: ["1NT","2C","2D"], desc: `GF. Transfer to ${s('C')}/${s('D')}/${s('H')} respectively.`, alert: true,
+        info: `Opener accepts with 3+ support. May accept with 2, but a 5-card major takes precedence.<br><br><b>If opener accepts the transfer, relay starts:</b><br>\u2022 Cheapest bid = no short suit<br>\u2022 Then short suits from bottom up<br><br><b>Next relay = Controls</b> (A=2, K=1)<br>\u2022 1st step = 2 controls<br>\u2022 2nd step = 3, etc.` },
+      { bid: ["2H","2S","3C","3D"], desc: `2\u2212 HCP, 6\u20137 card suit.` },
+    ]
+  },
+
+  // === 1D ===
+  { bid: "1D", desc: `4+${s('D')}, canap\u00e9. 11\u201315 HCP.`, alert: true, children: [
+    { bid: "1H", desc: `3+${s('H')}, 6+ HCP, NF. Can include 3\u20134${s('S')}, but not 5${s('S')}.`, children: [
+      { bid: "1S", desc: `5${s('S')}, can still have ${s('H')} support. Canap\u00e9.` },
+      { bid: "1NT", desc: `3${s('H')}, can have 6${s('D')} or canap\u00e9 with ${s('C')}.` },
+      { bid: "2C", desc: `4${s('D')}, 5${s('C')}, denies 3${s('H')}. Canap\u00e9.` },
+      { bid: "2D", desc: `6+${s('D')}, denies 3${s('H')}.` },
+      { bid: "2H", desc: `5${s('H')}, 4${s('D')}, min. Canap\u00e9.` },
+    ]},
+    { bid: "1NT", desc: `5+${s('C')} or invite with ${s('D')}. Opener refrains from bidding long suit with 3${s('C')}.`, alert: true },
+    { bid: "2NT", desc: `Sets ${s('D')} as trumps, starts relay.`, alert: true },
+  ]},
+
+  // === 1H ===
+  { bid: "1H", desc: `4+${s('H')}, canap\u00e9. 11\u201315 HCP.`, alert: true, children: [] },
+
+  // === 1S ===
+  { bid: "1S", desc: `4+${s('S')}, canap\u00e9. 11\u201315 HCP.`, alert: true, children: [] },
+
+  // === 1NT ===
+  { bid: "1NT", desc: `Semi-balanced. 13\u201315 HCP. Can include 6${s('C')}/${s('D')}.`, children: [] },
+
+  // === 2C ===
+  { bid: "2C", desc: `4+${s('C')}, canap\u00e9. 11\u201315 HCP.`, alert: true, children: [] },
+
+  // === 2D ===
+  { bid: "2D", desc: `Any 4441 or 5440 shape. 11\u201315 HCP.`, alert: true, children: [
+    { bid: ["2H","2S","3C"], desc: `To play. Opener corrects to next suit; bid suit is the short suit.` },
+    { bid: "2NT", desc: `Asking for short suit, GF. Opener bids short suit.`, alert: true },
+    { bid: ["3D","3H","3S"], desc: `Invite. Bid suit + a higher suit or ${s('C')}.`, alert: true },
+  ]},
+
+  // === 2H/2S ===
+  { bid: ["2H","2S"], desc: `Weak. 5+ of bid suit, 5\u201310 HCP.`, flat: true },
+
+  // === 2NT ===
+  { bid: "2NT", desc: `5/5 in minors or majors.`, alert: true, children: [
+    { bid: ["3C","3D"], desc: `To play vs minors. Opener corrects to 3${s('H')} with majors.` },
+    { bid: "3H", desc: `Forcing ask (Ogust).`, alert: true, children: [
+      { bid: "3S", desc: "Minors.", alert: true },
+      { bid: "3NT", desc: "Majors.", alert: true },
+    ]},
+    { bid: "3NT", desc: "To play." },
+  ]},
+
+  // === 3-level ===
+  { bid: ["3C","3D","3H","3S"], desc: `Weak. 6+ of bid suit.`, flat: true },
+
+  // === 3NT ===
+  { bid: "3NT", desc: `Solid 7\u20138 card major, approximately 8 tricks.`, flat: true },
+
+  // === 4-level ===
+  { bid: ["4C","4D","4H","4S"], desc: `To play. Weak, 7+ of bid suit.`, flat: true },
+
+  // === 4NT ===
+  { bid: "4NT", desc: `Specific ace ask.`, alert: true, flat: true },
+];
+
+// ============================================================
+// RENDERER
+// ============================================================
+
+function bidBadge(bid) {
+  const suit = bid.match(/\d(C|D|H|S)$/);
+  if (suit) {
+    const level = bid.replace(suit[1], '');
+    return `<span class="bid bid-${bid}">${level}<span class="suit-${suit[1]}"></span></span>`;
+  }
+  const cls = bid.replace(/\s/g, '');
+  return `<span class="bid bid-${cls}">${bid}</span>`;
+}
+
+function bidBadges(bid) {
+  const bids = Array.isArray(bid) ? bid : [bid];
+  return bids.map(bidBadge).join(' ');
+}
+
+function renderInfo(info) {
+  if (!info) return '';
+  return ` <span class="info" onclick="toggleInfo(event, this)">i<span class="info-text">${info}</span></span>`;
+}
+
+function renderAlert(alert) {
+  return alert ? ' <span class="alert">ALERT</span>' : '';
+}
+
+function renderNode(node) {
+  const hasChildren = node.children && node.children.length > 0;
+  const toggleClass = hasChildren ? '' : ' leaf';
+  const onclick = hasChildren ? ' onclick="toggleNode(this)"' : '';
+
+  let html = '<li>';
+  html += `<div class="node"${onclick}>`;
+  html += `<span class="toggle${toggleClass}">\u25BC</span> `;
+  html += bidBadges(node.bid);
+  html += ` <span class="desc">${node.desc}</span>`;
+  html += renderAlert(node.alert);
+  html += renderInfo(node.info);
+  html += '</div>';
+
+  if (hasChildren) {
+    html += '<ul>';
+    node.children.forEach(child => { html += renderNode(child); });
+    html += '</ul>';
+  }
+
+  html += '</li>';
+  return html;
+}
+
+function renderSection(node) {
+  const isFlat = node.flat || !node.children;
+  const hasChildren = node.children && node.children.length > 0;
+
+  let html = '';
+
+  if (isFlat) {
+    html += `<div class="section-header" style="cursor: default;">`;
+    html += `<h2>${bidBadges(node.bid)} \u2014 ${node.desc}${renderAlert(node.alert)}</h2>`;
+    html += renderInfo(node.info);
+    html += `</div>`;
+  } else {
+    html += `<div class="section-header" onclick="toggleSection(this)">`;
+    html += `<span class="toggle">\u25BC</span>`;
+    html += `<h2>${bidBadges(node.bid)} \u2014 ${node.desc}${renderAlert(node.alert)}</h2>`;
+    html += renderInfo(node.info);
+    html += `</div>`;
+    html += `<div class="section-body">`;
+    html += `<div class="tree"><ul>`;
+    if (hasChildren) {
+      node.children.forEach(child => { html += renderNode(child); });
+    }
+    html += `</ul></div></div>`;
+  }
+
+  return html;
+}
+
+// Render all sections
+document.getElementById('app').innerHTML = system.map(renderSection).join('\n');
+
+// ============================================================
+// INTERACTION
+// ============================================================
+
+function toggleInfo(event, el) {
+  event.stopPropagation();
+  document.querySelectorAll('.info.open').forEach(i => {
+    if (i !== el) i.classList.remove('open');
+  });
+  el.classList.toggle('open');
+}
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.info.open').forEach(i => i.classList.remove('open'));
+});
+
+function toggleNode(nodeEl) {
+  const li = nodeEl.closest('li');
+  const childUl = li.querySelector(':scope > ul');
+  if (!childUl) return;
+  const toggle = nodeEl.querySelector('.toggle');
+  li.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed');
+}
+
+function toggleSection(headerEl) {
+  const body = headerEl.nextElementSibling;
+  const toggle = headerEl.querySelector('.toggle');
+  body.classList.toggle('hidden');
+  toggle.classList.toggle('collapsed');
+}
+
+function expandAll() {
+  document.querySelectorAll('li.collapsed').forEach(li => {
+    li.classList.remove('collapsed');
+    const toggle = li.querySelector(':scope > .node .toggle');
+    if (toggle) toggle.classList.remove('collapsed');
+  });
+  document.querySelectorAll('.section-body.hidden').forEach(body => {
+    body.classList.remove('hidden');
+    const toggle = body.previousElementSibling.querySelector('.toggle');
+    if (toggle) toggle.classList.remove('collapsed');
+  });
+}
+
+function collapseAll() {
+  document.querySelectorAll('.tree li').forEach(li => {
+    if (li.querySelector(':scope > ul')) {
+      li.classList.add('collapsed');
+      const toggle = li.querySelector(':scope > .node .toggle');
+      if (toggle) toggle.classList.add('collapsed');
+    }
+  });
+  document.querySelectorAll('.section-body').forEach(body => {
+    body.classList.add('hidden');
+    const toggle = body.previousElementSibling.querySelector('.toggle');
+    if (toggle) toggle.classList.add('collapsed');
+  });
+}
+
+function expandLevel(maxDepth) {
+  collapseAll();
+  document.querySelectorAll('.section-body.hidden').forEach(body => {
+    body.classList.remove('hidden');
+    const toggle = body.previousElementSibling.querySelector('.toggle');
+    if (toggle) toggle.classList.remove('collapsed');
+  });
+  document.querySelectorAll('.tree').forEach(tree => {
+    expandToDepth(tree, 0, maxDepth);
+  });
+}
+
+function expandToDepth(el, currentDepth, maxDepth) {
+  const items = el.querySelectorAll(':scope > ul > li, :scope > li');
+  items.forEach(li => {
+    if (currentDepth < maxDepth && li.querySelector(':scope > ul')) {
+      li.classList.remove('collapsed');
+      const toggle = li.querySelector(':scope > .node .toggle');
+      if (toggle) toggle.classList.remove('collapsed');
+      expandToDepth(li, currentDepth + 1, maxDepth);
+    }
+  });
+}
+
+// Collapse everything on load
+collapseAll();
+</script>
+
+</body>
+</html>
